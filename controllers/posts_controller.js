@@ -5,23 +5,16 @@ import Comment from "../model/Comment.js";
 import { loginAuthentication } from "./user_controller.js"
 
 
-// a post can be made only when the user is already logged in
+// Create New Post
 export const addPost = async(req, res, next) => {
-    const {userId, title, description} = req.body;
+    const userId = loginAuthentication(req);
+    const { title, description } = req.body;
     const post = new Post({
         userId,
         title,
         description,
     });
-    let existingUser;
-    try {
-        existingUser = await User.findById(userId);
-    } catch (error){
-        console.log(error);
-    }
-    if(!existingUser) {
-        return res.status(500).json({ message: "Your daddy have not logged in yet" });
-    }
+    const existingUser = await User.findById(userId);
     try{
         // Many to one relation
         const session = await mongoose.startSession();
@@ -44,6 +37,7 @@ export const addPost = async(req, res, next) => {
     });
 };
 
+// Retrieve The Post With The Provided Id
 export const getPost = async(req, res, next) => {
     const postId = req.params.id;
     let post;
@@ -65,6 +59,7 @@ export const getPost = async(req, res, next) => {
     });
 };
 
+// Delete The Post With The Provided Id
 export const deletePost = async(req, res, next) => {
     const postId = req.params.id;
     let post;
@@ -78,6 +73,7 @@ export const deletePost = async(req, res, next) => {
     return res.status(200).json({ post });
 };
 
+// Return All The Posts Created By The Authenticated User
 export const getAllPosts = async(req, res, next) => {
     const userId = loginAuthentication(req);
     let userPosts;
@@ -105,11 +101,17 @@ export const getAllPosts = async(req, res, next) => {
     return res.status(200).json({ allPosts: posts });
 };
 
+// Authenticated User Likes The Post Of Provided Id
 export const like = async(req, res, next) => { 
-    const postId = req.params.id;
-    const currentUserId = "643437c4b02110050aab894a";
+    const currentUserId = loginAuthentication(req);
     const authenticateUser = await User.findById(currentUserId);
-    const post = await Post.findById(postId);
+    const postId = req.params.id;
+    let post;
+    try {
+        post = await Post.findById(postId);
+    } catch(error) {
+        return res.status(404).json({ message: "Posts not Found" }, error);
+    }
     const name = authenticateUser.name;
     const title = post.title;
     try {
@@ -127,11 +129,17 @@ export const like = async(req, res, next) => {
     return res.status(200).json({ message: `${name} liked ${title}`})
 };
 
+// Authenticated User Unlikes The Post Of Provided Id
 export const unlike = async(req, res, next) => { 
-    const postId = req.params.id;
-    const currentUserId = "643437c4b02110050aab894a";
+    const currentUserId = loginAuthentication(req);
     const authenticateUser = await User.findById(currentUserId);
-    const post = await Post.findById(postId);
+    const postId = req.params.id;
+    let post;
+    try {
+        post = await Post.findById(postId);
+    } catch(error) {
+        return res.status(404).json({ message: "Posts not Found" }, error);
+    }
     const name = authenticateUser.name;
     const title = post.title;
     try {
@@ -150,10 +158,11 @@ export const unlike = async(req, res, next) => {
     return res.status(200).json({ message: `${name} unliked ${title}`})
 };
 
+// Authenticated User Make a Comment On The Post Of Provided Id
 export const comment = async(req, res, next) => {
     const postId = req.params.id;
     const { content } = req.body;
-    const currentUserId = "643437c4b02110050aab894a";
+    const currentUserId = loginAuthentication(req);
     const authenticateUser = await User.findById(currentUserId);
     const post = await Post.findById(postId);
     const name = authenticateUser.name;

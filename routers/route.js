@@ -1,5 +1,5 @@
 import express from "express";
-import { getUser, login, authenticate, follow, unfollow } from "../controllers/user_controller.js";
+import { getUserData, authenticate, follow, unfollow, signup } from "../controllers/user_controller.js";
 import { addPost, comment, deletePost, getAllPosts, getPost, like, unlike } from "../controllers/posts_controller.js";
 
 export const router = express.Router();
@@ -14,9 +14,9 @@ router.post("/follow/:id", follow);
 router.post("/unfollow/:id", unfollow);
 
 
-router.get("/user", getUser); // return the data of the user of userId = id
-router.post("/authenticate", authenticate); // this will create a new user with some of its properties
-router.post("/user", login); // login
+router.get("/user", getUserData);
+router.post("/createUser", signup); // this will create a new user
+router.post("/authenticate", authenticate); 
 
 
 router.post("/like/:id", like);

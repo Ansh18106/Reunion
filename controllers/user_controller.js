@@ -3,29 +3,27 @@ import User from "../model/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-// login, getUser
-
+// decode id from cookie
 export const loginAuthentication = (req) => {
     const token = req.headers.cookie.substr(4);
     let id;
     jwt.verify(token, "this is the Private Key for reunion", (error, decoded) => {
         if (!error) {
             id = decoded.id
-        }
-        else {
+        } else {
             console.log(error);
         }
     });
     return id;
 }
 
-
+// create jwt token
 const createToken = (id) => {
     return jwt.sign({ id }, "this is the Private Key for reunion", {});
 };
 
-// return data of the user
-export const getUser = async(req, res, next) => {
+// retrieve data of the authenticated user
+export const getUserData = async(req, res, next) => {
     const userId = loginAuthentication(req);
     let user;
     try {
@@ -43,19 +41,19 @@ export const getUser = async(req, res, next) => {
     });
 }
 
-// signing up
-export const authenticate = async(req, res, next) => {
+// Create New User
+export const signup = async(req, res, next) => {
     const { name, email, password } = await req.body;
     let existingUser;
     const hashedPassword = bcrypt.hashSync(password);
     try {
         existingUser = await User.findOne({ email });
     } catch(error) {
-        return console.log(error);
+        res.status(500).json({ error });
     }
-
+    // Every User Should Have Different EmailIds
     if (existingUser) {
-        return res.status(404).json({ message: "user already exist" });
+        return res.status(404).json({ message: "user with this emailId already exist" });
     }
 
     const user = new User ({
@@ -65,18 +63,19 @@ export const authenticate = async(req, res, next) => {
     try {
         await user.save();
     } catch(error) {
-        console.log(error);
+        res.status(500).json({ error });
     }
     return res.status(201).json({ user });
 }
 
-export const login = async(req, res, next) => {
+// Authenticate with emailId and Password
+export const authenticate = async(req, res, next) => {
     const { email, password } = req.body;
     let existingUser;
     try {
         existingUser = await User.findOne({ email });
     } catch(error) {
-        return console.log(error);
+        res.status(500).json({ error });
     }
     if (!existingUser) {
         return res.status(404).json({ message: "This email is not registered: ("});
@@ -90,11 +89,18 @@ export const login = async(req, res, next) => {
     return res.status(201).json({ token: token });
 }
 
+// authenticate user will follow the user with provided id
 export const follow = async(req, res, next) => {
     const followingId = req.params.id;
     const followerId = loginAuthentication(req);
-    const authenticateUser = await User.findById(followerId);
+    if (followerId === followingId) {
+        return res.status(500).json({ message: "You are following yourself anyways..." });
+    }
     const followerUser = await User.findById(followingId);
+    const authenticateUser = await User.findById(followerId);
+    if (!followerUser) {
+        return res.status(404).json({ message: "Invalid Id" });
+    }
     const follower = authenticateUser.name;
     const following = followerUser.name;
     try {
@@ -109,11 +115,13 @@ export const follow = async(req, res, next) => {
         await session.commitTransaction();
         session.endSession();
     } catch(error) {
-        console.log(error);
+        res.status(500).json({ error });
     }
     return res.status(200).json({ message: `${follower} started following ${following}`})
 };
 
+
+// authenticate user will unfollow the user(if follows) with provided id
 export const unfollow = async(req, res, next) => {
     const followingId = req.params.id;
     const followerId = loginAuthentication(req);
@@ -131,7 +139,7 @@ export const unfollow = async(req, res, next) => {
         await session.commitTransaction();
         session.endSession();
     } catch(error) {
-        console.log(error);
+        res.status(500).json({ error });
     }
     return res.status(200).json({ message: `${follower} has unfollowed ${following}`})
 };
