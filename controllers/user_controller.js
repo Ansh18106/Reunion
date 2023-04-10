@@ -74,10 +74,10 @@ export const follow = async(req, res, next) => {
     try {
         const session = await mongoose.startSession();
         session.startTransaction();
-        // authenticateUser.following.pull(followingId);
+        authenticateUser.following.pull(followingId);
         authenticateUser.following.push(followingId);
         await authenticateUser.save();
-        // followerUser.followers.pull(followerId);
+        followerUser.followers.pull(followerId);
         followerUser.followers.push(followerId);
         await followerUser.save();
         await session.commitTransaction();
