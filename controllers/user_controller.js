@@ -16,7 +16,11 @@ export const getUser = async(req, res, next) => {
     if (!user) {
         return res.status(404).json({ message: "No users found" });
     }
-    return res.status(200).json({ user });
+    return res.status(200).json({
+        name: user.name,
+        followers: user.followers.length,
+        following: user.following.length
+    });
 }
 
 // signing up

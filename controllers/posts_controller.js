@@ -37,8 +37,9 @@ export const addPost = async(req, res, next) => {
     return res.status(200).json({
         id: post.id,
         title: post.title,
-        description: post.description,
-        time: post.timestamp                                   
+        description: post.description,        
+        creation_date: post.timestamp.toLocaleDateString(),
+        creation_time: post.timestamp.toLocaleTimeString(),                             
     });
 };
 
