@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Post from "../model/Post.js";
 import User from "../model/User.js";
 import Comment from "../model/Comment.js";
+import { loginAuthentication } from "./user_controller.js"
 
 
 // a post can be made only when the user is already logged in
@@ -78,7 +79,7 @@ export const deletePost = async(req, res, next) => {
 };
 
 export const getAllPosts = async(req, res, next) => {
-    const userId = req.params.id;
+    const userId = loginAuthentication(req);
     let userPosts;
     try {
         userPosts = await User.findById(userId).populate("posts");
@@ -101,7 +102,6 @@ export const getAllPosts = async(req, res, next) => {
             likes: userPosts.posts[i].likes.length,
         });
     }
-    console.log(userPosts.posts.length);
     return res.status(200).json({ allPosts: posts });
 };
 

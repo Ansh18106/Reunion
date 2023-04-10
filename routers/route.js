@@ -7,14 +7,14 @@ export const router = express.Router();
 router.post("/posts", addPost);
 router.get("/posts/:id", getPost);
 router.delete("/posts/:id", deletePost);
-router.get("/all_posts/:id", getAllPosts);
+router.get("/all_posts", getAllPosts);
 
 
 router.post("/follow/:id", follow);
 router.post("/unfollow/:id", unfollow);
 
 
-router.get("/user/:id", getUser); // return the data of the user of userId = id
+router.get("/user", getUser); // return the data of the user of userId = id
 router.post("/authenticate", authenticate); // this will create a new user with some of its properties
 router.post("/user", login); // login
 
