@@ -8,6 +8,9 @@ import { loginAuthentication } from "./user_controller.js"
 // Create New Post
 export const addPost = async(req, res, next) => {
     const userId = loginAuthentication(req);
+    if (!userId) {
+        return res.status(400).json({ message: "Please Login" });
+    }
     const { title, description } = req.body;
     const post = new Post({
         userId,
@@ -53,7 +56,8 @@ export const getPost = async(req, res, next) => {
         id: post.id,
         title: post.title,
         description: post.description,
-        time: post.timestamp,
+        creation_time: post.timestamp.toLocaleDateString(),
+        creation_date: post.timestamp.toLocaleTimeString(),
         likes: post.likes.length,
         comments: post.comments        
     });
@@ -76,6 +80,9 @@ export const deletePost = async(req, res, next) => {
 // Return All The Posts Created By The Authenticated User
 export const getAllPosts = async(req, res, next) => {
     const userId = loginAuthentication(req);
+    if (!userId) {
+        return res.status(400).json({ message: "Please Login" });
+    }
     let userPosts;
     try {
         userPosts = await User.findById(userId).populate("posts");
@@ -104,6 +111,9 @@ export const getAllPosts = async(req, res, next) => {
 // Authenticated User Likes The Post Of Provided Id
 export const like = async(req, res, next) => { 
     const currentUserId = loginAuthentication(req);
+    if (!userId) {
+        return res.status(400).json({ message: "Please Login" });
+    }
     const authenticateUser = await User.findById(currentUserId);
     const postId = req.params.id;
     let post;
@@ -132,6 +142,9 @@ export const like = async(req, res, next) => {
 // Authenticated User Unlikes The Post Of Provided Id
 export const unlike = async(req, res, next) => { 
     const currentUserId = loginAuthentication(req);
+    if (!userId) {
+        return res.status(400).json({ message: "Please Login" });
+    }
     const authenticateUser = await User.findById(currentUserId);
     const postId = req.params.id;
     let post;
@@ -163,6 +176,9 @@ export const comment = async(req, res, next) => {
     const postId = req.params.id;
     const { content } = req.body;
     const currentUserId = loginAuthentication(req);
+    if (!userId) {
+        return res.status(400).json({ message: "Please Login" });
+    }
     const authenticateUser = await User.findById(currentUserId);
     const post = await Post.findById(postId);
     const name = authenticateUser.name;

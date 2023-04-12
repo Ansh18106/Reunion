@@ -3,15 +3,22 @@ import User from "../model/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// const tokenExpirationTime = "3600000" // 1 hr
+const tokenExpirationTime = "0.1h" // 1 hr
+
 // decode id from cookie
 export const loginAuthentication = (req) => {
+    if (!req.headers.cookie) {
+        return null;
+    }
     const token = req.headers.cookie.substr(4);
     let id;
     jwt.verify(token, "this is the Private Key for reunion", (error, decoded) => {
         if (!error) {
             id = decoded.id
         } else {
-            console.log(error);
+            console.log(17, error);
+            return null;
         }
     });
     return id;
@@ -19,13 +26,19 @@ export const loginAuthentication = (req) => {
 
 // create jwt token
 const createToken = (id) => {
-    return jwt.sign({ id }, "this is the Private Key for reunion", {});
+    return jwt.sign({ id }, "this is the Private Key for reunion", {
+        expiresIn: tokenExpirationTime
+    });
 };
 
 // retrieve data of the authenticated user
 export const getUserData = async(req, res, next) => {
     console.log("Getting Current User's Data")
     const userId = loginAuthentication(req);
+    if (!userId) {
+        console.log(userId);
+        return res.status(400).json({ message: "Please Login" });
+    }
     let user;
     try {
         user = await User.findById(userId);
@@ -44,7 +57,6 @@ export const getUserData = async(req, res, next) => {
 
 // Create New User
 export const signup = async(req, res, next) => {
-    console.log("Signing Up");
     const { name, email, password } = await req.body;
     let existingUser;
     const hashedPassword = bcrypt.hashSync(password);
@@ -57,21 +69,23 @@ export const signup = async(req, res, next) => {
     if (existingUser) {
         return res.status(404).json({ message: "user with this emailId already exist" });
     }
-
+    
     const user = new User ({
         name, email, password: hashedPassword
     });
-
+    
     try {
         await user.save();
     } catch(error) {
         res.status(500).json({ error });
     }
+    console.log("signed up");
     return res.status(201).json({ user });
 }
 
 // Authenticate with emailId and Password
 export const authenticate = async(req, res, next) => {
+    console.log("logging Up");
     const { email, password } = req.body;
     let existingUser;
     try {
@@ -96,6 +110,9 @@ export const authenticate = async(req, res, next) => {
 export const follow = async(req, res, next) => {
     const followingId = req.params.id;
     const followerId = loginAuthentication(req);
+    if (!userId) {
+        return res.status(400).json({ message: "Please Login" });
+    }
     if (followerId === followingId) {
         return res.status(500).json({ message: "You are following yourself anyways..." });
     }
@@ -128,6 +145,9 @@ export const follow = async(req, res, next) => {
 export const unfollow = async(req, res, next) => {
     const followingId = req.params.id;
     const followerId = loginAuthentication(req);
+    if (!userId) {
+        return res.status(400).json({ message: "Please Login" });
+    }
     const authenticateUser = await User.findById(followerId);
     const followerUser = await User.findById(followingId);
     const follower = authenticateUser.name;
