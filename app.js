@@ -5,7 +5,8 @@ import mongoose from "mongoose";
 import { router } from "./routers/route.js";
 
 const app = express();
-const mongoURL = "mongodb://localhost:27017/Reunion";
+// const mongoURL = "mongodb://localhost:27017/Reunion";
+const mongoURL = "mongodb+srv://anshbansal18106:tw3HQK8NelYX1mgP@cluster0.jstwolr.mongodb.net/?retryWrites=true&w=majority";
 
 app.use(express.json());
 app.use("/api", router);

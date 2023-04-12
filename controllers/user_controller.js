@@ -24,6 +24,7 @@ const createToken = (id) => {
 
 // retrieve data of the authenticated user
 export const getUserData = async(req, res, next) => {
+    console.log("Getting Current User's Data")
     const userId = loginAuthentication(req);
     let user;
     try {
@@ -43,6 +44,7 @@ export const getUserData = async(req, res, next) => {
 
 // Create New User
 export const signup = async(req, res, next) => {
+    console.log("Signing Up");
     const { name, email, password } = await req.body;
     let existingUser;
     const hashedPassword = bcrypt.hashSync(password);
@@ -86,6 +88,7 @@ export const authenticate = async(req, res, next) => {
     }
     const token = createToken(existingUser.id);
     res.cookie('jwt', token, { httpOnly: true });
+    console.log("Authentication Done!!!");
     return res.status(201).json({ token: token });
 }
 
