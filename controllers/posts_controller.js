@@ -34,9 +34,8 @@ export const addPost = async(req, res, next) => {
     return res.status(200).json({
         id: post.id,
         title: post.title,
-        description: post.description,        
-        creation_date: post.timestamp.toLocaleDateString(),
-        creation_time: post.timestamp.toLocaleTimeString(),                             
+        description: post.description,
+        creation_time: post.timestamp.toLocaleDateString() + ' @ ' + post.timestamp.toLocaleTimeString()                            
     });
 };
 
@@ -56,8 +55,7 @@ export const getPost = async(req, res, next) => {
         id: post.id,
         title: post.title,
         description: post.description,
-        creation_time: post.timestamp.toLocaleDateString(),
-        creation_date: post.timestamp.toLocaleTimeString(),
+        creation_time: post.timestamp.toLocaleDateString() + ' @ ' + post.timestamp.toLocaleTimeString(),
         likes: post.likes.length,
         comments: post.comments        
     });
@@ -99,8 +97,9 @@ export const getAllPosts = async(req, res, next) => {
             id: userPosts.posts[i].id,
             title: userPosts.posts[i].title,
             description: userPosts.posts[i].description,
-            creation_date: userPosts.posts[i].timestamp.toLocaleDateString(),
-            creation_time: userPosts.posts[i].timestamp.toLocaleTimeString(),
+            creation_time: userPosts.posts[i].timestamp.toLocaleDateString() + ' @ ' + userPosts.posts[i].timestamp.toLocaleTimeString(),
+            // creation_date: userPosts.posts[i].timestamp.toLocaleDateString(),
+            // creation_time: userPosts.posts[i].timestamp.toLocaleTimeString(),
             comments: userPosts.posts[i].comments,
             likes: userPosts.posts[i].likes.length,
         });
@@ -142,7 +141,7 @@ export const like = async(req, res, next) => {
 // Authenticated User Unlikes The Post Of Provided Id
 export const unlike = async(req, res, next) => { 
     const currentUserId = loginAuthentication(req);
-    if (!userId) {
+    if (!currentUserId) {
         return res.status(400).json({ message: "Please Login" });
     }
     const authenticateUser = await User.findById(currentUserId);
@@ -181,8 +180,8 @@ export const comment = async(req, res, next) => {
     }
     const authenticateUser = await User.findById(currentUserId);
     const post = await Post.findById(postId);
-    const name = authenticateUser.name;
-    const title = post.title;
+    // const name = authenticateUser.name;
+    // const title = post.title;
     const comment = new Comment({
         parentPost: postId,
         userId: currentUserId,
@@ -191,7 +190,7 @@ export const comment = async(req, res, next) => {
     try {
         const session = await mongoose.startSession();
         session.startTransaction();
-        await post.comments.push(comment.id);
+        post.comments.push(comment.id);
         await post.save();
         await comment.save();
         await session.commitTransaction();
@@ -203,5 +202,5 @@ export const comment = async(req, res, next) => {
     if (!comment) {
         return res.status(500).json({ message: "couldn't created a comment." });
     }
-    return res.status(200).json({ comment_id: comment.id})
+    return res.status(200).json({ comment_id: comment.id })
 };

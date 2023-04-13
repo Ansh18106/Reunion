@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
 // const tokenExpirationTime = "3600000" // 1 hr
-const tokenExpirationTime = "0.1h" // 1 hr
+const tokenExpirationTime = ".5h" // 30 mins
 
 // decode id from cookie
 export const loginAuthentication = (req) => {
@@ -17,7 +17,7 @@ export const loginAuthentication = (req) => {
         if (!error) {
             id = decoded.id
         } else {
-            console.log(17, error);
+            console.log(17, "please login");
             return null;
         }
     });
@@ -33,7 +33,7 @@ const createToken = (id) => {
 
 // retrieve data of the authenticated user
 export const getUserData = async(req, res, next) => {
-    console.log("Getting Current User's Data")
+    console.log("Getting Current User's Data");
     const userId = loginAuthentication(req);
     if (!userId) {
         console.log(userId);
@@ -45,9 +45,7 @@ export const getUserData = async(req, res, next) => {
     } catch( error ) {
         return next(error);
     }
-    if (!user) {
-        return res.status(404).json({ message: "No users found" });
-    }
+    
     return res.status(200).json({
         name: user.name,
         followers: user.followers.length,
@@ -102,8 +100,23 @@ export const authenticate = async(req, res, next) => {
     }
     const token = createToken(existingUser.id);
     res.cookie('jwt', token, { httpOnly: true });
-    console.log("Authentication Done!!!");
+    const tokenExpirationCall = setTimeout(() => {
+        console.log('Please LogIn');
+    }, 30*60*1000);
+    console.log("Window is open for 30 mins only");
     return res.status(201).json({ token: token });
+}
+
+export const logOut = async(req, res, next) => {
+    const userId = loginAuthentication(req);
+    if (userId) {
+        res.clearCookie('jwt',{
+            httpOnly: true,
+            sameSite: 'None',
+            secure: true
+        });
+    }
+    return res.status(200).json({ message: "Please login" });
 }
 
 // authenticate user will follow the user with provided id
